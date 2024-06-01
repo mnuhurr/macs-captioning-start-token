@@ -12,7 +12,7 @@ def collate_embeddings(embeddings: List[torch.Tensor]) -> Tuple[torch.Tensor, to
 
     maxlen = max(map(lambda x: x.size(0), embeddings))
     x = torch.zeros(batch_size, maxlen, emb_dim, dtype=embeddings[0].dtype)
-    x_mask = torch.zeros(batch_size, maxlen, dtype=bool)
+    x_mask = torch.ones(batch_size, maxlen, dtype=bool)
 
     for k, item in enumerate(embeddings):
         x[k, :item.size(0)] = item
@@ -25,7 +25,7 @@ def collate_tokens(tokens: List[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tens
     batch_size = len(tokens)
     maxlen = max(map(len, tokens))
     x = torch.zeros(batch_size, maxlen, dtype=tokens[0].dtype)
-    x_mask = torch.zeros(batch_size, maxlen, dtype=bool)
+    x_mask = torch.ones(batch_size, maxlen, dtype=bool)
 
     for k, item in enumerate(tokens):
         x[k, :len(item)] = item
@@ -51,7 +51,7 @@ class EmbeddingCaptionDataset(torch.utils.data.Dataset):
                  embedding_pooling_factor: Optional[int] = None):
         """
         embedding_filenames: list of paths to the serialized audio features
-        captions: list of dicts containing captions. different dicts in the list denote different datasets, 
+        captions: list of dicts containing captions. different dicts in the list denote different datasets,
                   and each dataset has it's own start token to make a distinction
         tokenizer: tokenizer to use converting the captions
         embedding_pooling_factor: downsampling factor for the time axis
