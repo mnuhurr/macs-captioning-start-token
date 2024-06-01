@@ -17,6 +17,7 @@ from typing import Dict, List
 
 
 def city_splits(filenames: List[Path]) -> Dict[str, List[Path]]:
+    # use macs file naming convention to split the data based on where they were recorded
     split = {}
 
     for fn in filenames:
