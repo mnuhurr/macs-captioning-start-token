@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 
 from common import read_yaml, init_log
 from dataset import EmbeddingCaptionDataset, collate_fn
-from models import AudioCaptioner
+from models import AudioCaptioner, AudioCaptionerConfig
 from models.utils import model_size
 from trainer import Trainer
 from utils import load_tokenizer
@@ -95,7 +95,7 @@ def main(config_fn='settings.yaml'):
         num_workers=num_workers,
         collate_fn=collate_fn)
 
-    model = AudioCaptioner(
+    config = AudioCaptionerConfig(
         d_embedding=d_embedding,
         vocab_size=vocab_size,
         d_model=d_model,
@@ -106,6 +106,8 @@ def main(config_fn='settings.yaml'):
         dropout=dropout,
         p_mask_embedding=p_mask_embedding,
         p_mask_tokens=p_mask_tokens)
+
+    model = AudioCaptioner(config)
 
     logger.info(f'model size {model_size(model)/1e6:.1f}M')
 

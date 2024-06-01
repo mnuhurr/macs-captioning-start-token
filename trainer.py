@@ -163,6 +163,7 @@ class Trainer:
         ckpt_path.parent.mkdir(exist_ok=True, parents=True)
 
         data = {
+            'config': self.model.config,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'scheduler': self.scheduler.state_dict(),

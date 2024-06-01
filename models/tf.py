@@ -3,6 +3,8 @@ import torch
 
 from typing import Optional
 
+from dataclasses import dataclass
+
 
 @torch.jit.script
 def mask_tokens(x: torch.Tensor, mask_token: torch.Tensor, p: float) -> torch.Tensor:
@@ -12,6 +14,21 @@ def mask_tokens(x: torch.Tensor, mask_token: torch.Tensor, p: float) -> torch.Te
     x[mask_pos] = mask_token.to(x.dtype)
 
     return x
+
+
+@dataclass(frozen=True)
+class AudioCaptionerConfig:
+    d_embedding: int
+    vocab_size: int
+    d_model: int
+    n_enc_layers: int
+    n_enc_heads: int
+    n_dec_layers: int
+    n_dec_heads: int
+    dropout: float = 0.1
+    p_mask_embedding: float = 0.0
+    p_mask_tokens: float = 0.0
+    max_tokens: int = 1024
 
 
 class PositionalEncoding(torch.nn.Module):
@@ -131,35 +148,26 @@ class TokenDecoder(torch.nn.Module):
 
 
 class AudioCaptioner(torch.nn.Module):
-    def __init__(self,
-                 d_embedding: int,
-                 vocab_size: int,
-                 d_model: int,
-                 n_enc_layers: int,
-                 n_enc_heads: int,
-                 n_dec_layers: int,
-                 n_dec_heads: int,
-                 dropout: float = 0.1,
-                 p_mask_embedding: float = 0.0,
-                 p_mask_tokens: float = 0.0,
-                 max_tokens: int = 1024):
+    def __init__(self, config: AudioCaptionerConfig):
         super().__init__()
 
+        self.config = config
+
         self.encoder = EmbeddingEncoder(
-            d_embedding=d_embedding,
-            d_model=d_model,
-            n_encoder_layers=n_enc_layers,
-            n_encoder_heads=n_enc_heads,
-            p_embedding_mask=p_mask_embedding,
-            dropout=dropout)
+            d_embedding=self.config.d_embedding,
+            d_model=self.config.d_model,
+            n_encoder_layers=self.config.n_enc_layers,
+            n_encoder_heads=self.config.n_enc_heads,
+            p_embedding_mask=self.config.p_mask_embedding,
+            dropout=self.config.dropout)
 
         self.decoder = TokenDecoder(
-            vocab_size=vocab_size,
-            d_model=d_model,
-            n_decoder_layers=n_dec_layers,
-            n_decoder_heads=n_dec_heads,
-            p_token_mask=p_mask_tokens,
-            dropout=dropout)
+            vocab_size=self.config.vocab_size,
+            d_model=self.config.d_model,
+            n_decoder_layers=self.config.n_dec_layers,
+            n_decoder_heads=self.config.n_dec_heads,
+            p_token_mask=self.config.p_mask_tokens,
+            dropout=self.config.dropout)
 
     def forward(self,
                 embeddings: torch.Tensor,
