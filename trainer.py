@@ -97,9 +97,13 @@ class Trainer:
         return train_loss / len(self.train_loader)
 
     @torch.inference_mode()
-    def _val_epoch(self) -> float:
+    def _val_epoch(self) -> tuple[float, float]:
         self.model.eval()
         val_loss = 0.0
+        # counts for accuracy
+        correct = 0
+        total = 0
+
         for x, xm, y, ym in self.val_loader:
             x = x.to(self.device)
             xm = xm.to(self.device)
@@ -114,7 +118,12 @@ class Trainer:
             loss = masked_loss(y_pred, tar, mask=ym)
             val_loss += loss
 
-        return val_loss / len(self.val_loader)
+            pred = torch.argmax(y_pred, dim=-1)
+            correct += ((pred == tar) & ~ym).sum()
+            total += (~ym).sum()
+
+        acc = float(correct / total)
+        return val_loss / len(self.val_loader), acc
 
     def train(self, n_epochs: int):
         patience = self.max_patience
@@ -122,11 +131,11 @@ class Trainer:
 
         for epoch in range(n_epochs):
             train_loss = self._train_epoch()
-            val_loss = self._val_epoch()
+            val_loss, val_acc = self._val_epoch()
 
             self.history.append((train_loss, val_loss))
 
-            self._log(f'epoch {epoch + 1} - training loss {train_loss:.4f} - validation loss {val_loss:.4f}')
+            self._log(f'epoch {epoch + 1} - training loss {train_loss:.4f} - validation loss {val_loss:.4f} -  accuracy {val_acc:.4f}')
 
             if val_loss < best_loss:
                 best_loss = val_loss
