@@ -119,6 +119,7 @@ def main(config_fn='settings.yaml'):
         optimizer=optimizer,
         warmup_epochs=warmup_epochs,
         checkpoint_dir=ckpt_dir,
+        patience=max_patience,
         save_every=save_every,
         best_model_path=cfg.get('model_path'),
         log_interval=log_interval,
